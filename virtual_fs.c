@@ -37,16 +37,17 @@
 #define FAT_CLUSTERS_MAX (65525 - 100)
 #define FAT_CLUSTERS_MIN (4086 + 100)
 
-typedef struct {
+typedef struct
+{
     uint8_t boot_sector[11];
     /* DOS 2.0 BPB - Bios Parameter Block, 11 bytes */
     uint16_t bytes_per_sector;
-    uint8_t  sectors_per_cluster;
+    uint8_t sectors_per_cluster;
     uint16_t reserved_logical_sectors;
-    uint8_t  num_fats;
+    uint8_t num_fats;
     uint16_t max_root_dir_entries;
     uint16_t total_logical_sectors;
-    uint8_t  media_descriptor;
+    uint8_t media_descriptor;
     uint16_t logical_sectors_per_fat;
     /* DOS 3.31 BPB - Bios Parameter Block, 12 bytes */
     uint16_t physical_sectors_per_track;
@@ -54,28 +55,30 @@ typedef struct {
     uint32_t hidden_sectors;
     uint32_t big_sectors_on_drive;
     /* Extended BIOS Parameter Block, 26 bytes */
-    uint8_t  physical_drive_number;
-    uint8_t  not_used;
-    uint8_t  boot_record_signature;
+    uint8_t physical_drive_number;
+    uint8_t not_used;
+    uint8_t boot_record_signature;
     uint32_t volume_id;
-    char     volume_label[11];
-    char     file_system_type[8];
+    char volume_label[11];
+    char file_system_type[8];
     /* bootstrap data in bytes 62-509 */
-    uint8_t  bootstrap[448];
+    uint8_t bootstrap[448];
     /* These entries in place of bootstrap code are the *nix partitions */
-    //uint8_t  partition_one[16];
-    //uint8_t  partition_two[16];
-    //uint8_t  partition_three[16];
-    //uint8_t  partition_four[16];
+    // uint8_t  partition_one[16];
+    // uint8_t  partition_two[16];
+    // uint8_t  partition_three[16];
+    // uint8_t  partition_four[16];
     /* Mandatory value at bytes 510-511, must be 0xaa55 */
     uint16_t signature;
 } __attribute__((packed)) mbr_t;
 
-typedef struct file_allocation_table {
-    uint8_t f[512];
+typedef struct file_allocation_table
+{
+    uint8_t f[512 * 8];
 } file_allocation_table_t;
 
-typedef struct FatDirectoryEntry {
+typedef struct FatDirectoryEntry
+{
     vfs_filename_t filename;
     uint8_t attributes;
     uint8_t reserved;
@@ -94,11 +97,13 @@ COMPILER_ASSERT(sizeof(FatDirectoryEntry_t) == 32);
 // to save RAM all files must be in the first root dir entry (512 bytes)
 //  but 2 actually exist on disc (32 entries) to accomodate hidden OS files,
 //  folders and metadata
-typedef struct root_dir {
+typedef struct root_dir
+{
     FatDirectoryEntry_t f[32];
 } root_dir_t;
 
-typedef struct virtual_media {
+typedef struct virtual_media
+{
     vfs_read_cb_t read_cb;
     vfs_write_cb_t write_cb;
     uint32_t length;
@@ -121,30 +126,30 @@ COMPILER_ASSERT(0x0200 == VFS_SECTOR_SIZE);
 // If root directory size changes update max_root_dir_entries
 COMPILER_ASSERT(0x0020 == sizeof(root_dir_t) / sizeof(FatDirectoryEntry_t));
 static const mbr_t mbr_tmpl = {
-    /*uint8_t[11]*/.boot_sector = {
+    /*uint8_t[11]*/ .boot_sector = {
         0xEB, 0x3C, 0x90,
         'M', 'S', 'D', '0', 'S', '4', '.', '1' // OEM Name in text (8 chars max)
     },
-    /*uint16_t*/.bytes_per_sector           = 0x0200,       // 512 bytes per sector
-    /*uint8_t */.sectors_per_cluster        = 0x08,         // 4k cluser
-    /*uint16_t*/.reserved_logical_sectors   = 0x0001,       // mbr is 1 sector
-    /*uint8_t */.num_fats                   = 0x02,         // 2 FATs
-    /*uint16_t*/.max_root_dir_entries       = 0x0020,       // 32 dir entries (max)
-    /*uint16_t*/.total_logical_sectors      = 0x1f50,       // sector size * # of sectors = drive size
-    /*uint8_t */.media_descriptor           = 0xf8,         // fixed disc = F8, removable = F0
-    /*uint16_t*/.logical_sectors_per_fat    = 0x0001,       // FAT is 1k - ToDO:need to edit this
-    /*uint16_t*/.physical_sectors_per_track = 0x0001,       // flat
-    /*uint16_t*/.heads                      = 0x0001,       // flat
-    /*uint32_t*/.hidden_sectors             = 0x00000000,   // before mbt, 0
-    /*uint32_t*/.big_sectors_on_drive       = 0x00000000,   // 4k sector. not using large clusters
-    /*uint8_t */.physical_drive_number      = 0x00,
-    /*uint8_t */.not_used                   = 0x00,         // Current head. Linux tries to set this to 0x1
-    /*uint8_t */.boot_record_signature      = 0x29,         // signature is present
-    /*uint32_t*/.volume_id                  = 0x27021974,   // serial number
-    // needs to match the root dir label
-    /*char[11]*/.volume_label               = {'D', 'A', 'P', 'L', 'I', 'N', 'K', '-', 'D', 'N', 'D'},
+    /*uint16_t*/ .bytes_per_sector = 0x0200,           // 512 bytes per sector
+    /*uint8_t */ .sectors_per_cluster = 0x08,          // 4k cluser
+    /*uint16_t*/ .reserved_logical_sectors = 0x0001,   // mbr is 1 sector
+    /*uint8_t */ .num_fats = 0x02,                     // 2 FATs
+    /*uint16_t*/ .max_root_dir_entries = 0x0020,       // 32 dir entries (max)
+    /*uint16_t*/ .total_logical_sectors = 0x1f50,      // sector size * # of sectors = drive size
+    /*uint8_t */ .media_descriptor = 0xf8,             // fixed disc = F8, removable = F0
+    /*uint16_t*/ .logical_sectors_per_fat = 0x0001,    // FAT is 1k - ToDO:need to edit this
+    /*uint16_t*/ .physical_sectors_per_track = 0x0001, // flat
+    /*uint16_t*/ .heads = 0x0001,                      // flat
+    /*uint32_t*/ .hidden_sectors = 0x00000000,         // before mbt, 0
+    /*uint32_t*/ .big_sectors_on_drive = 0x00000000,   // 4k sector. not using large clusters
+    /*uint8_t */ .physical_drive_number = 0x00,
+    /*uint8_t */ .not_used = 0x00,              // Current head. Linux tries to set this to 0x1
+    /*uint8_t */ .boot_record_signature = 0x29, // signature is present
+    /*uint32_t*/ .volume_id = 0x27021974,       // serial number
+                                                // needs to match the root dir label
+    /*char[11]*/ .volume_label = {'D', 'A', 'P', 'L', 'I', 'N', 'K', '-', 'D', 'N', 'D'},
     // unused by msft - just a label (FAT, FAT12, FAT16)
-    /*char[8] */.file_system_type           = {'F', 'A', 'T', '1', '6', ' ', ' ', ' '},
+    /*char[8] */ .file_system_type = {'F', 'A', 'T', '1', '6', ' ', ' ', ' '},
 
     /* BOOTSTRAP SOURCE CODE AND PAYLOAD GENERATOR
      * PRINTS OUT WARNING MESSAGE ON ACCIDENTAL BOOT FROM DAPLINK
@@ -233,10 +238,11 @@ static const mbr_t mbr_tmpl = {
         0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
     },
     // Signature MUST be 0xAA55 to maintain compatibility (i.e. with Android).
-    /*uint16_t*/.signature = 0xAA55,
+    /*uint16_t*/ .signature = 0xAA55,
 };
 
-enum virtual_media_idx_t {
+enum virtual_media_idx_t
+{
     MEDIA_IDX_MBR = 0,
     MEDIA_IDX_FAT1,
     MEDIA_IDX_FAT2,
@@ -248,10 +254,10 @@ enum virtual_media_idx_t {
 // Note - everything in virtual media must be a multiple of VFS_SECTOR_SIZE
 const virtual_media_t virtual_media_tmpl[] = {
     /*  Read CB         Write CB        Region Size                 Region Name     */
-    {   read_mbr,       write_none,     VFS_SECTOR_SIZE         },  /* MBR          */
-    {   read_fat,       write_none,     0 /* Set at runtime */  },  /* FAT1         */
-    {   read_fat,       write_none,     0 /* Set at runtime */  },  /* FAT2         */
-    {   read_dir,       write_dir,      VFS_SECTOR_SIZE * 2     },  /* Root Dir     */
+    {read_mbr, write_none, VFS_SECTOR_SIZE},        /* MBR          */
+    {read_fat, write_none, 0 /* Set at runtime */}, /* FAT1         */
+    {read_fat, write_none, 0 /* Set at runtime */}, /* FAT2         */
+    {read_dir, write_dir, VFS_SECTOR_SIZE * 2},     /* Root Dir     */
     /* Raw filesystem contents follow */
 };
 // Keep virtual_media_idx_t in sync with virtual_media_tmpl
@@ -269,8 +275,7 @@ static const FatDirectoryEntry_t root_dir_entry = {
     /*uint16_t*/ .modification_time = 0x8E41,
     /*uint16_t*/ .modification_date = 0x32bb,
     /*uint16_t*/ .first_cluster_low_16 = 0x0000,
-    /*uint32_t*/ .filesize = 0x00000000
-};
+    /*uint32_t*/ .filesize = 0x00000000};
 
 static const FatDirectoryEntry_t dir_entry_tmpl = {
     /*uint8_t[11] */ .filename = {""},
@@ -284,8 +289,7 @@ static const FatDirectoryEntry_t dir_entry_tmpl = {
     /*uint16_t*/ .modification_time = 0x83dc,
     /*uint16_t*/ .modification_date = 0x4876,
     /*uint16_t*/ .first_cluster_low_16 = 0x0000,
-    /*uint32_t*/ .filesize = 0x00000000
-};
+    /*uint32_t*/ .filesize = 0x00000000};
 
 mbr_t mbr;
 file_allocation_table_t fat;
@@ -309,7 +313,8 @@ static void write_fat(file_allocation_table_t *fat, uint32_t idx, uint16_t val)
     high_idx = idx * 2 + 1;
 
     // Assert that this is still within the fat table
-    if (high_idx >= ARRAY_SIZE(fat->f)) {
+    if (high_idx >= ARRAY_SIZE(fat->f))
+    {
         util_assert(0);
         return;
     }
@@ -338,19 +343,25 @@ void vfs_init(const vfs_filename_t drive_name, uint32_t disk_size)
     memcpy(&mbr, &mbr_tmpl, sizeof(mbr_t));
     total_sectors = ((disk_size + KB(64)) / mbr.bytes_per_sector);
     // Make sure this is the right size for a FAT16 volume
-    if (total_sectors < FAT_CLUSTERS_MIN * mbr.sectors_per_cluster) {
+    if (total_sectors < FAT_CLUSTERS_MIN * mbr.sectors_per_cluster)
+    {
         util_assert(0);
         total_sectors = FAT_CLUSTERS_MIN * mbr.sectors_per_cluster;
-    } else if (total_sectors > FAT_CLUSTERS_MAX * mbr.sectors_per_cluster) {
+    }
+    else if (total_sectors > FAT_CLUSTERS_MAX * mbr.sectors_per_cluster)
+    {
         util_assert(0);
         total_sectors = FAT_CLUSTERS_MAX * mbr.sectors_per_cluster;
     }
-    if (total_sectors >= 0x10000) {
+    if (total_sectors >= 0x10000)
+    {
         mbr.total_logical_sectors = 0;
-        mbr.big_sectors_on_drive  = total_sectors;
-    } else {
+        mbr.big_sectors_on_drive = total_sectors;
+    }
+    else
+    {
         mbr.total_logical_sectors = total_sectors;
-        mbr.big_sectors_on_drive  = 0;
+        mbr.big_sectors_on_drive = 0;
     }
     // FAT table will likely be larger than needed, but this is allowed by the
     // fat specification
@@ -364,15 +375,16 @@ void vfs_init(const vfs_filename_t drive_name, uint32_t disk_size)
     virtual_media_idx = MEDIA_IDX_COUNT;
     data_start = 0;
 
-    for (i = 0; i < ARRAY_SIZE(virtual_media_tmpl); i++) {
+    for (i = 0; i < ARRAY_SIZE(virtual_media_tmpl); i++)
+    {
         data_start += virtual_media[i].length;
     }
 
     // Initialize FAT
     fat_idx = 0;
-    write_fat(&fat, fat_idx, 0xFFF8);    // Media type "media_descriptor"
+    write_fat(&fat, fat_idx, 0xFFF8); // Media type "media_descriptor"
     fat_idx++;
-    write_fat(&fat, fat_idx, 0xFFFF);    // FAT12 - always 0xFFF (no meaning), FAT16 - dirty/clean (clean = 0xFFFF)
+    write_fat(&fat, fat_idx, 0xFFFF); // FAT12 - always 0xFFF (no meaning), FAT16 - dirty/clean (clean = 0xFFFF)
     fat_idx++;
     // Initialize root dir
     dir_idx = 0;
@@ -384,11 +396,16 @@ void vfs_init(const vfs_filename_t drive_name, uint32_t disk_size)
 uint32_t vfs_get_total_size()
 {
     uint32_t size;
-    if (mbr.total_logical_sectors > 0) {
+    if (mbr.total_logical_sectors > 0)
+    {
         size = mbr.total_logical_sectors * mbr.bytes_per_sector;
-    } else if (mbr.big_sectors_on_drive > 0) {
+    }
+    else if (mbr.big_sectors_on_drive > 0)
+    {
         size = mbr.big_sectors_on_drive * mbr.bytes_per_sector;
-    } else {
+    }
+    else
+    {
         size = 0;
         util_assert(0);
     }
@@ -409,10 +426,12 @@ vfs_file_t vfs_create_file(const vfs_filename_t filename, vfs_read_cb_t read_cb,
     // Write the cluster chain to the fat table
     first_cluster = 0;
 
-    if (len > 0) {
+    if (len > 0)
+    {
         first_cluster = fat_idx;
 
-        for (i = 0; i < clusters - 1; i++) {
+        for (i = 0; i < clusters - 1; i++)
+        {
             write_fat(&fat, fat_idx, fat_idx + 1);
             fat_idx++;
         }
@@ -422,7 +441,8 @@ vfs_file_t vfs_create_file(const vfs_filename_t filename, vfs_read_cb_t read_cb,
     }
 
     // Update directory entry
-    if (dir_idx >= ARRAY_SIZE(dir_current.f)) {
+    if (dir_idx >= ARRAY_SIZE(dir_current.f))
+    {
         util_assert(0);
         return VFS_FILE_INVALID;
     }
@@ -436,7 +456,8 @@ vfs_file_t vfs_create_file(const vfs_filename_t filename, vfs_read_cb_t read_cb,
     de->first_cluster_low_16 = (first_cluster >> 0) & 0xFFFF;
 
     // Update virtual media
-    if (virtual_media_idx >= ARRAY_SIZE(virtual_media)) {
+    if (virtual_media_idx >= ARRAY_SIZE(virtual_media))
+    {
         util_assert(0);
         return VFS_FILE_INVALID;
     }
@@ -444,11 +465,13 @@ vfs_file_t vfs_create_file(const vfs_filename_t filename, vfs_read_cb_t read_cb,
     virtual_media[virtual_media_idx].read_cb = read_zero;
     virtual_media[virtual_media_idx].write_cb = write_none;
 
-    if (0 != read_cb) {
+    if (0 != read_cb)
+    {
         virtual_media[virtual_media_idx].read_cb = read_cb;
     }
 
-    if (0 != write_cb) {
+    if (0 != write_cb)
+    {
         virtual_media[virtual_media_idx].write_cb = write_cb;
     }
 
@@ -468,7 +491,8 @@ vfs_sector_t vfs_file_get_start_sector(vfs_file_t file)
 {
     FatDirectoryEntry_t *de = file;
 
-    if (vfs_file_get_size(file) == 0) {
+    if (vfs_file_get_size(file) == 0)
+    {
         return VFS_INVALID_SECTOR;
     }
 
@@ -500,13 +524,15 @@ void vfs_read(uint32_t requested_sector, uint8_t *buf, uint32_t num_sectors)
     memset(buf, 0, num_sectors * VFS_SECTOR_SIZE);
     current_sector = 0;
 
-    for (i = 0; i < ARRAY_SIZE(virtual_media); i++) {
+    for (i = 0; i < ARRAY_SIZE(virtual_media); i++)
+    {
         uint32_t vm_sectors = virtual_media[i].length / VFS_SECTOR_SIZE;
         uint32_t vm_start = current_sector;
         uint32_t vm_end = current_sector + vm_sectors;
 
         // Data can be used in this sector
-        if ((requested_sector >= vm_start) && (requested_sector < vm_end)) {
+        if ((requested_sector >= vm_start) && (requested_sector < vm_end))
+        {
             uint32_t sector_offset;
             uint32_t sectors_to_write = vm_end - requested_sector;
             sectors_to_write = MIN(sectors_to_write, num_sectors);
@@ -518,7 +544,8 @@ void vfs_read(uint32_t requested_sector, uint8_t *buf, uint32_t num_sectors)
         }
 
         // If there is no more data to be read then break
-        if (num_sectors == 0) {
+        if (num_sectors == 0)
+        {
             break;
         }
 
@@ -533,13 +560,15 @@ void vfs_write(uint32_t requested_sector, const uint8_t *buf, uint32_t num_secto
     uint32_t current_sector;
     current_sector = 0;
 
-    for (i = 0; i < virtual_media_idx; i++) {
+    for (i = 0; i < virtual_media_idx; i++)
+    {
         uint32_t vm_sectors = virtual_media[i].length / VFS_SECTOR_SIZE;
         uint32_t vm_start = current_sector;
         uint32_t vm_end = current_sector + vm_sectors;
 
         // Data can be used in this sector
-        if ((requested_sector >= vm_start) && (requested_sector < vm_end)) {
+        if ((requested_sector >= vm_start) && (requested_sector < vm_end))
+        {
             uint32_t sector_offset;
             uint32_t sectors_to_read = vm_end - requested_sector;
             sectors_to_read = MIN(sectors_to_read, num_sectors);
@@ -551,7 +580,8 @@ void vfs_write(uint32_t requested_sector, const uint8_t *buf, uint32_t num_secto
         }
 
         // If there is no more data to be read then break
-        if (num_sectors == 0) {
+        if (num_sectors == 0)
+        {
             break;
         }
 
@@ -577,7 +607,8 @@ static uint32_t read_mbr(uint32_t sector_offset, uint8_t *data, uint32_t num_sec
     uint32_t read_size = sizeof(mbr_t);
     COMPILER_ASSERT(sizeof(mbr_t) <= VFS_SECTOR_SIZE);
 
-    if (sector_offset != 0) {
+    if (sector_offset != 0)
+    {
         // Don't worry about reading other sectors
         return 0;
     }
@@ -591,22 +622,23 @@ static uint32_t read_mbr(uint32_t sector_offset, uint8_t *data, uint32_t num_sec
 static uint32_t read_fat(uint32_t sector_offset, uint8_t *data, uint32_t num_sectors)
 {
     uint32_t read_size = sizeof(file_allocation_table_t);
-    COMPILER_ASSERT(sizeof(file_allocation_table_t) <= VFS_SECTOR_SIZE);
 
-    if (sector_offset != 0) {
-        // Don't worry about reading other sectors
+    if ((sector_offset + num_sectors) * VFS_SECTOR_SIZE > read_size)
+    {
         return 0;
     }
+    uint8_t *fat_data = (uint8_t *)&fat;
+    memcpy(data, fat_data + sector_offset * VFS_SECTOR_SIZE, num_sectors * VFS_SECTOR_SIZE);
 
-    memcpy(data, &fat, read_size);
-    return read_size;
+    return num_sectors * VFS_SECTOR_SIZE;
 }
 
 /* No need to handle writes to the fat */
 
 static uint32_t read_dir(uint32_t sector_offset, uint8_t *data, uint32_t num_sectors)
 {
-    if ((sector_offset + num_sectors) * VFS_SECTOR_SIZE > sizeof(dir_current)) {
+    if ((sector_offset + num_sectors) * VFS_SECTOR_SIZE > sizeof(dir_current))
+    {
         // Trying to read too much of the root directory
         util_assert(0);
         return 0;
@@ -615,9 +647,10 @@ static uint32_t read_dir(uint32_t sector_offset, uint8_t *data, uint32_t num_sec
     // Zero buffer data is VFS_SECTOR_SIZE max
     memset(data, 0, VFS_SECTOR_SIZE);
 
-    if (sector_offset == 0) { //Handle the first 512 bytes
+    if (sector_offset == 0)
+    { // Handle the first 512 bytes
         // Copy data that is actually created in the directory
-        memcpy(data, &dir_current.f[0], dir_idx*sizeof(FatDirectoryEntry_t));
+        memcpy(data, &dir_current.f[0], dir_idx * sizeof(FatDirectoryEntry_t));
     }
 
     return num_sectors * VFS_SECTOR_SIZE;
@@ -631,7 +664,8 @@ static void write_dir(uint32_t sector_offset, const uint8_t *data, uint32_t num_
     uint32_t num_entries;
     uint32_t i;
 
-    if ((sector_offset + num_sectors) * VFS_SECTOR_SIZE > sizeof(dir_current)) {
+    if ((sector_offset + num_sectors) * VFS_SECTOR_SIZE > sizeof(dir_current))
+    {
         // Trying to write too much of the root directory
         util_assert(0);
         return;
@@ -644,10 +678,12 @@ static void write_dir(uint32_t sector_offset, const uint8_t *data, uint32_t num_
     // If this is the first sector start at index 1 to get past drive name
     i = 0 == sector_offset ? 1 : 0;
 
-    for (; i < num_entries; i++) {
+    for (; i < num_entries; i++)
+    {
         bool same_name;
 
-        if (0 == memcmp(&old_entry[i], &new_entry[i], sizeof(FatDirectoryEntry_t))) {
+        if (0 == memcmp(&old_entry[i], &new_entry[i], sizeof(FatDirectoryEntry_t)))
+        {
             continue;
         }
 
@@ -657,13 +693,15 @@ static void write_dir(uint32_t sector_offset, const uint8_t *data, uint32_t num_
         file_change_cb(new_entry[i].filename, VFS_FILE_CHANGED, (vfs_file_t)&old_entry[i], (vfs_file_t)&new_entry[i]);
 
         // Deleted
-        if (0xe5 == (uint8_t)new_entry[i].filename[0]) {
+        if (0xe5 == (uint8_t)new_entry[i].filename[0])
+        {
             file_change_cb(old_entry[i].filename, VFS_FILE_DELETED, (vfs_file_t)&old_entry[i], (vfs_file_t)&new_entry[i]);
             continue;
         }
 
         // Created
-        if (!same_name && filename_valid(new_entry[i].filename)) {
+        if (!same_name && filename_valid(new_entry[i].filename))
+        {
             file_change_cb(new_entry[i].filename, VFS_FILE_CREATED, (vfs_file_t)&old_entry[i], (vfs_file_t)&new_entry[i]);
             continue;
         }
@@ -683,7 +721,7 @@ static uint32_t cluster_to_sector(uint32_t cluster_idx)
     return sectors_before_data + (cluster_idx - 2) * mbr.sectors_per_cluster;
 }
 
-bool filename_valid(const vfs_filename_t  filename)
+bool filename_valid(const vfs_filename_t filename)
 {
     // Information on valid 8.3 filenames can be found in
     // the microsoft hardware whitepaper:
@@ -699,15 +737,19 @@ bool filename_valid(const vfs_filename_t  filename)
     uint32_t i;
 
     // Check for invalid starting characters
-    for (i = 0; i < sizeof(invalid_starting_chars); i++) {
-        if (invalid_starting_chars[i] == filename[0]) {
+    for (i = 0; i < sizeof(invalid_starting_chars); i++)
+    {
+        if (invalid_starting_chars[i] == filename[0])
+        {
             return false;
         }
     }
 
     // Make sure all the characters are valid
-    for (i = 0; i < sizeof(vfs_filename_t); i++) {
-        if (!filename_character_valid(filename[i])) {
+    for (i = 0; i < sizeof(vfs_filename_t); i++)
+    {
+        if (!filename_character_valid(filename[i]))
+        {
             return false;
         }
     }
@@ -722,18 +764,22 @@ static bool filename_character_valid(char character)
     uint32_t i;
 
     // Lower case characters are not allowed
-    if ((character >= 'a') && (character <= 'z')) {
+    if ((character >= 'a') && (character <= 'z'))
+    {
         return false;
     }
 
     // Values less than 0x20 are not allowed except 0x5
-    if ((character < 0x20) && (character != 0x5)) {
+    if ((character < 0x20) && (character != 0x5))
+    {
         return false;
     }
 
     // Check for special characters that are not allowed
-    for (i = 0; i < sizeof(invalid_chars); i++) {
-        if (invalid_chars[i] == character) {
+    for (i = 0; i < sizeof(invalid_chars); i++)
+    {
+        if (invalid_chars[i] == character)
+        {
             return false;
         }
     }

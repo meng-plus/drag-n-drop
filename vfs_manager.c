@@ -21,18 +21,18 @@
 
 #include <ctype.h>
 
-#include "daplink.h"
-#include DAPLINK_MAIN_HEADER
-#include "cmsis_os2.h"
-#include "rl_usb.h"
+//#include "daplink.h"
+//#include DAPLINK_MAIN_HEADER
+//#include "cmsis_os2.h"
+//#include "rl_usb.h"
 #include "virtual_fs.h"
 #include "vfs_manager.h"
-#include "daplink_debug.h"
+//#include "daplink_debug.h"
 #include "info.h"
 #include "settings.h"
 #include "util.h"
-#include "version_git.h"
-#include "IO_Config.h"
+//#include "version_git.h"
+//#include "IO_Config.h"
 #include "file_stream.h"
 #include "error.h"
 
@@ -117,16 +117,16 @@ static const file_transfer_state_t default_transfer_state = {
 
 //Compile option not to include MSC at all, these will be dummy variables
 #ifndef MSC_ENDPOINT
-BOOL USBD_MSC_MediaReady = __FALSE;
-BOOL USBD_MSC_ReadOnly = __FALSE;
-U32 USBD_MSC_MemorySize;
-U32 USBD_MSC_BlockSize;
-U32 USBD_MSC_BlockGroup;
-U32 USBD_MSC_BlockCount;
-U8 *USBD_MSC_BlockBuf;
+//BOOL USBD_MSC_MediaReady = __FALSE;
+//BOOL USBD_MSC_ReadOnly = __FALSE;
+//U32 USBD_MSC_MemorySize;
+//U32 USBD_MSC_BlockSize;
+//U32 USBD_MSC_BlockGroup;
+//U32 USBD_MSC_BlockCount;
+//U8 *USBD_MSC_BlockBuf;
 #endif
 
-uint32_t usb_buffer[VFS_SECTOR_SIZE / sizeof(uint32_t)];
+//static uint32_t usb_buffer[VFS_SECTOR_SIZE / sizeof(uint32_t)];
 static error_t fail_reason = ERROR_SUCCESS;
 static file_transfer_state_t file_transfer_state;
 
@@ -136,8 +136,8 @@ static vfs_mngr_state_t vfs_state;
 static vfs_mngr_state_t vfs_state_next;
 static uint32_t time_usb_idle;
 
-static osMutexId_t sync_mutex;
-static osThreadId_t sync_thread = 0;
+//static osMutexId_t sync_mutex;
+//static osThreadId_t sync_thread = 0;
 
 // Synchronization functions
 static void sync_init(void);
@@ -195,11 +195,11 @@ void vfs_mngr_init(bool enable)
     if (enable) {
         vfs_state = VFS_MNGR_STATE_CONNECTED;
         vfs_state_next = VFS_MNGR_STATE_CONNECTED;
-        USBD_MSC_MediaReady = 1;
+//        USBD_MSC_MediaReady = 1;
     } else {
         vfs_state = VFS_MNGR_STATE_DISCONNECTED;
         vfs_state_next = VFS_MNGR_STATE_DISCONNECTED;
-        USBD_MSC_MediaReady = 0;
+//        USBD_MSC_MediaReady = 0;
     }
 }
 
@@ -278,16 +278,16 @@ void vfs_mngr_periodic(uint32_t elapsed_ms)
     // Processing when entering a state
     switch (vfs_state_local) {
         case VFS_MNGR_STATE_DISCONNECTED:
-            USBD_MSC_MediaReady = 0;
+            //USBD_MSC_MediaReady = 0;
             break;
 
         case VFS_MNGR_STATE_RECONNECTING:
-            USBD_MSC_MediaReady = 0;
+//            USBD_MSC_MediaReady = 0;
             break;
 
         case VFS_MNGR_STATE_CONNECTED:
             build_filesystem();
-            USBD_MSC_MediaReady = 1;
+//            USBD_MSC_MediaReady = 1;
             break;
     }
 
@@ -307,7 +307,7 @@ void usbd_msc_init(void)
     vfs_state = VFS_MNGR_STATE_DISCONNECTED;
     vfs_state_next = VFS_MNGR_STATE_DISCONNECTED;
     time_usb_idle = 0;
-    USBD_MSC_MediaReady = 0;
+//    USBD_MSC_MediaReady = 0;
 }
 
 void usbd_msc_read_sect(uint32_t sector, uint8_t *buf, uint32_t num_of_sectors)
@@ -315,12 +315,12 @@ void usbd_msc_read_sect(uint32_t sector, uint8_t *buf, uint32_t num_of_sectors)
     sync_assert_usb_thread();
 
     // dont proceed if we're not ready
-    if (!USBD_MSC_MediaReady) {
-        return;
-    }
+//    if (!USBD_MSC_MediaReady) {
+//        return;
+//    }
 
     // indicate msc activity
-    main_blink_msc_led(MAIN_LED_FLASH);
+    //main_blink_msc_led(MAIN_LED_FLASH);
     vfs_read(sector, buf, num_of_sectors);
 }
 
@@ -328,9 +328,9 @@ void usbd_msc_write_sect(uint32_t sector, uint8_t *buf, uint32_t num_of_sectors)
 {
     sync_assert_usb_thread();
 
-    if (!USBD_MSC_MediaReady) {
-        return;
-    }
+//    if (!USBD_MSC_MediaReady) {
+//        return;
+//    }
 
     // Restart the disconnect counter on every packet
     // so the device does not detach in the middle of a
@@ -342,7 +342,7 @@ void usbd_msc_write_sect(uint32_t sector, uint8_t *buf, uint32_t num_of_sectors)
     }
 
     // indicate msc activity
-    main_blink_msc_led(MAIN_LED_FLASH);
+    //main_blink_msc_led(MAIN_LED_FLASH);
     vfs_write(sector, buf, num_of_sectors);
     if (TRASNFER_FINISHED == file_transfer_state.transfer_state) {
         return;
@@ -352,23 +352,23 @@ void usbd_msc_write_sect(uint32_t sector, uint8_t *buf, uint32_t num_of_sectors)
 
 static void sync_init(void)
 {
-    sync_thread = osThreadGetId();
-    sync_mutex = osMutexNew(NULL);
+    //sync_thread = osThreadGetId();
+    //sync_mutex = osMutexNew(NULL);
 }
 
 static void sync_assert_usb_thread(void)
 {
-    util_assert(osThreadGetId() == sync_thread);
+    //util_assert(osThreadGetId() == sync_thread);
 }
 
 static void sync_lock(void)
 {
-    osMutexAcquire(sync_mutex, 0);
+    //osMutexAcquire(sync_mutex, 0);
 }
 
 static void sync_unlock(void)
 {
-    osMutexRelease(sync_mutex);
+    //osMutexRelease(sync_mutex);
 }
 
 static bool changing_state()
@@ -383,11 +383,11 @@ static void build_filesystem()
     vfs_user_build_filesystem();
     vfs_set_file_change_callback(file_change_handler);
     // Set mass storage parameters
-    USBD_MSC_MemorySize = vfs_get_total_size();
-    USBD_MSC_BlockSize  = VFS_SECTOR_SIZE;
-    USBD_MSC_BlockGroup = 1;
-    USBD_MSC_BlockCount = USBD_MSC_MemorySize / USBD_MSC_BlockSize;
-    USBD_MSC_BlockBuf   = (uint8_t *)usb_buffer;
+//    USBD_MSC_MemorySize = vfs_get_total_size();
+//    USBD_MSC_BlockSize  = VFS_SECTOR_SIZE;
+//    USBD_MSC_BlockGroup = 1;
+//    USBD_MSC_BlockCount = USBD_MSC_MemorySize / USBD_MSC_BlockSize;
+//    USBD_MSC_BlockBuf   = (uint8_t *)usb_buffer;
 }
 
 // Callback to handle changes to the root directory.  Should be used with vfs_set_file_change_callback

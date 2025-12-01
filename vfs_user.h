@@ -53,7 +53,9 @@ bool vfs_user_file_change_handler_hook(const vfs_filename_t filename,
 //!     but otherwise no other standard behaviour is applied.
 //! @retval false The hook did not handle the file; continue with canonical behaviour.
 bool vfs_user_magic_file_hook(const vfs_filename_t filename, bool *do_remount);
-
+// Build the filesystem by calling vfs_init and then adding files with vfs_create_file
+void vfs_user_build_filesystem(void);
+void vfs_user_disconnecting();
 #ifdef __cplusplus
 }
 #endif
